@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>图片上传</title>
+	<style>
+		/* 全局样式 */
+		body {
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			background-color: #f4f4f9;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			min-height: 100vh;
+			margin: 0;
+		}
+
+		h1 {
+			color: #333;
+			margin-bottom: 2rem;
+		}
+
+		/* 上传表单样式 */
+		#uploadForm {
+			background-color: #fff;
+			padding: 2rem;
+			border-radius: 8px;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			width: 80%;
+			max-width: 800px;
+			/* 添加网格布局 */
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 8px;
+			justify-items: center;
+		}
+
+		/* 上传图标样式 */
+		.upload-icon {
+			width: 120px;
+			height: 120px;
+			border: 2px dashed #007bff;
+			border-radius: 8px;
+			display: inline-flex;
+			justify-content: center;
+			align-items: center;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			background-size: cover;
+			background-position: center;
+		}
+
+		.upload-icon:hover {
+			background-color: #f0f6ff;
+			border-color: #0056b3;
+		}
+
+		.upload-icon::after {
+			content: '+';
+			font-size: 2rem;
+			color: #007bff;
+		}
+
+		input[type="file"] {
+			display: none;
+		}
+
+		/* 提交按钮样式 */
+		input[type="submit"] {
+			background-color: #007bff;
+			color: white;
+			padding: 12px 24px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			font-size: 1rem;
+			transition: background-color 0.3s ease;
+			display: block;
+			margin: 20px auto 0;
+			/* 清除网格布局的影响 */
+			grid-column: 1 / -1;
+		}
+
+		input[type="submit"]:hover {
+			background-color: #0056b3;
+		}
+	</style>
+</head>
+
+<body>
+<h1>图片上传</h1>
+<form id="uploadForm" action="upload.php" method="post" enctype="multipart/form-data">
+	<script>
+		const form = document.getElementById('uploadForm');
+		for (let i = 0; i < 12; i++) {
+			// 创建 label 元素
+			const label = document.createElement('label');
+			label.className = 'upload-icon';
+			label.setAttribute('for', `image${i}`);
+
+			// 创建 input 元素
+			const input = document.createElement('input');
+			input.type = 'file';
+			input.id = `image${i}`;
+			input.name = 'images[]';
+			input.onchange = function () {
+				previewImage(this);
+			};
+
+			// 将元素添加到表单中
+			form.appendChild(label);
+			form.appendChild(input);
+		}
+	</script>
+	<input type="submit" value="提交" onclick="return validateAndSubmit()">
+</form>
+
+<script>
+	function previewImage(input) {
+		if (input.files && input.files[0]) {
+			const reader = new FileReader();
+			reader.onload = function (e) {
+				const label = document.querySelector(`label[for="${input.id}"]`);
+				label.style.backgroundImage = `url(${e.target.result})`;
+				label.innerHTML = '';
+			};
+			reader.readAsDataURL(input.files[0]);
+		}
+	}
+
+	function validateAndSubmit() {
+		const fileInputs = document.querySelectorAll('input[type="file"]');
+		let validCount = 0;
+
+		fileInputs.forEach(input => {
+			if (input.files.length > 0) {
+				validCount++;
+			}
+		});
+
+		if (validCount < 12) {
+			alert('请至少上传 12 张图片！');
+			return false;
+		}
+
+		const form = document.getElementById('uploadForm');
+		const xhr = new XMLHttpRequest();
+
+		xhr.open(form.method, form.action, true);
+		xhr.onreadystatechange = function () {
+			if (xhr.readyState === 4 && xhr.status === 200) {
+				try {
+					const response = JSON.parse(xhr.responseText);
+					if (response.success) {
+						// 提交成功，跳转到 index1.html
+						window.location.href = 'index1.html';
+					} else {
+						alert('上传失败: ' + response.message);
+					}
+				} catch (error) {
+					alert('处理服务器响应时出错');
+					alert('图片过大或面积过大，无法保存或展示');
+				}
+			}
+		};
+
+		const formData = new FormData(form);
+		xhr.send(formData);
+
+		return false;
+	}
+</script>
+</body>
+
+</html>
